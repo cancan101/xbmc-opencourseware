@@ -13,14 +13,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from xbmcvideoplugin import XBMCVideoPlugin, XBMCVideoPluginHandler
-from xbmccommon import (urlread, async_urlread, DialogProgress, 
-    parse_url_qs, XBMCVideoPluginException)
-from youtube import get_flvs
-from urllib import urlencode
+from xbmcvideoplugin import XBMCVideoPluginHandler
+from xbmccommon import urlread
 from BeautifulSoup import BeautifulSoup as BS, SoupStrainer as SS
 import re
 import urlparse
+from resources.lib.youtube import get_flv
 
 #MODE_MIT_DEPARTMENTS = '10'
 MODE_MIT_COURSES = '11'
@@ -36,7 +34,7 @@ class _BasePluginHandler(XBMCVideoPluginHandler):
         return urlparse.urljoin(self.base_url, path)
 
 class Courses(_BasePluginHandler):
-    def run(self):
+    def getAllCourse(self):
         src = urlread(self.courses_url)
         div_tags = BS(src, parseOnlyThese=SS('tr', {'class': re.compile('row|alt-row')}))
 
@@ -46,6 +44,11 @@ class Courses(_BasePluginHandler):
         items = [{'name': div.u.string,
                  'url': self.urljoin(div.a['href']),
                  'mode': MODE_MIT_LECTURES} for div in video_divs]
+        
+        return items
+    
+    def run(self):
+        items = self.getAllCourse()
         self.app.add_dirs(items)
 
 class Lectures(_BasePluginHandler):
@@ -77,25 +80,18 @@ class Lectures(_BasePluginHandler):
         self.app.add_resolvable_dirs(items)
 
 class PlayVideo(_BasePluginHandler):
-    def get_high_quality(self, youtube_urls):
-        hres = [(key, int(key.split('x')[0])) for key in youtube_urls.keys()]
-        #highest quality is last in list
-        hres = sorted(hres, key=lambda h: h[1])
-        return youtube_urls[hres[-1][0]]
-        
     def run(self):
-        src = urlread(self.args['url'])
+        ocw_page_url = self.args['url']
+        src = urlread(ocw_page_url)
         p = r"http://www.youtube.com/v/(?P<videoid>.+?)'"
         m = re.search(p, src)
         if not m:
             print 'NO VIDEO FOUND'
             return
-        youtube_urls = get_flvs(videoid=m.group('videoid'))
-        url = self.get_high_quality(youtube_urls)
-        #get highest quality by default for now
-        #{'320x480': 'url', '480x720': 'url'}
-        #self.app.set_resolved_url(youtube_urls.values()[0])
-        self.app.set_resolved_url(url)
+        youtube_url = get_flv(video_id=m.group('videoid'))
+#        youtube_url = get_high_quality(youtube_urls)
+
+        self.app.set_resolved_url(youtube_url)
 
 
 site_listing = {'name': 'MIT',
