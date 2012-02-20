@@ -13,8 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from xbmcvideoplugin import XBMCVideoPluginHandler
-from xbmccommon import urlread
+from Handlers import XBMCVideoPluginHandler
+from utils import urlread
 from BeautifulSoup import BeautifulSoup as BS, SoupStrainer as SS
 import re
 import urlparse
@@ -105,3 +105,5 @@ handler_map = [(MODE_MIT_COURSES, Courses),
                (MODE_MIT_VIDEO, PlayVideo),
               ]
 
+if __name__ == '__main__':
+    print Courses(None, 0, None, {}).getAllCourse()

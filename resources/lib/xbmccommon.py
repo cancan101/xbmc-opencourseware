@@ -12,18 +12,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from urllib import unquote_plus, quote_plus
+from urllib import unquote_plus
 from urlparse import urlparse
 from cStringIO import StringIO
-import urllib2
 import xbmc
 import xbmcgui
 import xbmcplugin
 import asyncore, socket
-from urlparse import urlparse
 import pickle
 import re
 from htmlentitydefs import name2codepoint
+from utils import urlread
 
 def htmlentitydecode(s):
     return re.sub('&(%s);' % '|'.join(name2codepoint), 
@@ -173,13 +172,6 @@ def async_urlread(url_list, dp=None):
 
     #finished successfully, return a list of the responses
     return [c.read_buffer.getvalue() for c in http_clients]
-
-def urlread(url, data=None):
-    """Helper function to reduce code needed for a simple urlopen()"""
-    f = urllib2.urlopen(url, data)
-    page_contents = f.read()
-    f.close()
-    return page_contents
 
 #Code modeled after python's urllib.unquote
 _hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
