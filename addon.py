@@ -57,12 +57,17 @@ if __name__ == '__main__':
     settings = {'default_handler': Sites,
                 'plugin_id': PLUGIN_ID, 
                 'plugin_name': PLUGIN_NAME}
+    
+    handler_maps = []
+    for site in AVAILABLE_SITES:
+        handler_maps += site.handler_map
 
     app = XBMCVideoPlugin(
         [(MODE_SITES, Sites),] 
-        + mit.handler_map 
-        + yale.handler_map
-        + mitworld.handler_map,
+        + handler_maps,
+#        + mit.handler_map 
+#        + yale.handler_map
+#        + mitworld.handler_map,
          **settings
     )
     app.run()
