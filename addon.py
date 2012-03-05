@@ -39,8 +39,9 @@ from htmlentitydefs import name2codepoint
 from resources.lib import mit
 from resources.lib import yale
 from resources.lib import mitworld
+from resources.lib import stanford
 
-AVAILABLE_SITES = [mit, yale, mitworld]
+AVAILABLE_SITES = [mit, yale, mitworld, stanford]
 PLUGIN_NAME = 'Open Courseware'
 PLUGIN_ID = 'plugin.video.opencourseware'
 
