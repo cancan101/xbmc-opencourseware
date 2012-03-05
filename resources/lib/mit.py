@@ -18,7 +18,7 @@ from utils import urlread
 from BeautifulSoup import BeautifulSoup as BS, SoupStrainer as SS
 import re
 import urlparse
-from resources.lib.youtube import get_flv
+from resources.lib.youtube import get_flv, get_plugin_url
 
 #MODE_MIT_DEPARTMENTS = '10'
 MODE_MIT_COURSES = '11'
@@ -34,12 +34,17 @@ class _BasePluginHandler(XBMCVideoPluginHandler):
         return urlparse.urljoin(self.base_url, path)
 
 class Courses(_BasePluginHandler):
-    def getAllCourse(self):
+    def getAllCourse(self, includeSelected=False):
         src = urlread(self.courses_url)
         div_tags = BS(src, parseOnlyThese=SS('tr', {'class': re.compile('row|alt-row')}))
 
         #filter out classes that don't have full video lectures available
-        video_divs = filter(lambda d: d.find('a', {'title': 'Video lectures'}), div_tags)
+        if includeSelected:
+            lectureFilter = re.compile('Video lectures|Selected video lectures')
+        else:
+            lectureFilter = 'Video lectures'
+            
+        video_divs = filter(lambda d: d.find('a', {'title': lectureFilter}), div_tags)
 
         items = [{'name': div.u.string,
                  'url': self.urljoin(div.a['href']),
@@ -66,8 +71,8 @@ class Lectures(_BasePluginHandler):
         return [{'name': 'NO LECTURES FOUND'}]
         pass
 
-    def run(self):
-        src = urlread(self.args['url'])
+    def getLecuresFor(self, url):
+        src = urlread(url)
         div_tags = BS(src, parseOnlyThese=SS('div', {'class': 'medialisting'}))
 
         #attempt to parse normal page
@@ -75,23 +80,54 @@ class Lectures(_BasePluginHandler):
             items = self.parse_normal_course(div_tags)
         else:
             items = self.parse_rm_course(src)
-
-
+        
+        return items
+            
+    def run(self):
+        items = self.getLecuresFor(url=self.args['url'])
         self.app.add_resolvable_dirs(items)
 
 class PlayVideo(_BasePluginHandler):
-    def run(self):
-        ocw_page_url = self.args['url']
-        src = urlread(ocw_page_url)
+    def extractYouTubeFile(self, src):
         p = r"http://www.youtube.com/v/(?P<videoid>.+?)'"
         m = re.search(p, src)
         if not m:
             print 'NO VIDEO FOUND'
-            return
-        youtube_url = get_flv(video_id=m.group('videoid'))
-#        youtube_url = get_high_quality(youtube_urls)
-
-        self.app.set_resolved_url(youtube_url)
+            return None
+        video_id = m.group('videoid')
+        
+#        youtube_url = get_flv(video_id=video_id)
+        youtube_url = get_plugin_url(video_id=video_id)
+        return youtube_url
+    
+    def extractInternetArchiveFiles(self, src):
+        p = r'"(http://www.archive.org/download/.*)"'
+        m = re.search(p, src)
+        if not m:
+            print 'NO VIDEO FOUND'
+            return None
+        return m.group(1)
+    
+    def extractMediaFile(self, url, preferArchive=False):
+        ocw_page_url = url
+        src = urlread(ocw_page_url)
+        
+        if preferArchive:
+            archive = self.extractInternetArchiveFiles(src=src)
+            if archive:
+                return archive
+        
+        youtube_url = self.extractYouTubeFile(src=src)        
+        
+        return youtube_url
+    
+    def run(self):
+        url = self.args['url']
+        mediaURL = self.extractMediaFile(url=url)
+        
+        if mediaURL:
+#            self.app.play_video(mediaURL)
+            self.app.set_resolved_url(mediaURL)
 
 
 site_listing = {'name': 'MIT',
@@ -106,4 +142,4 @@ handler_map = [(MODE_MIT_COURSES, Courses),
               ]
 
 if __name__ == '__main__':
-    print Courses(None, 0, None, {}).getAllCourse()
+    pass
