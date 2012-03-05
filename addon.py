@@ -50,7 +50,7 @@ MODE_SITES = '0'
 class Sites(XBMCVideoPluginHandler):
     def run(self):
         items = [site.site_listing for site in AVAILABLE_SITES]
-        app.add_dirs(items)
+        app.add_dirs(items, sort=True)
 
 
 if __name__ == '__main__':

@@ -135,7 +135,7 @@ class XBMCVideoPlugin(object):
         if end == True: 
             xbmcplugin.endOfDirectory(self.argv1, cacheToDisc=True)   
     
-    def add_dirs(self, dirs, end=True):
+    def add_dirs(self, dirs, end=True, sort=False):
         """Takes a list of directory items which will be added as
         folders in the XBMC UI.  Each directory item is a dictionary
         containing the following key/value pairs:
@@ -150,6 +150,8 @@ class XBMCVideoPlugin(object):
         xbmcplugin.endOfDirectory()
         """
         #_dirs = [self._make_directory_item(d, True) for d in dirs]
+        if sort:
+            dirs = sorted(dirs, key=lambda x: x['name'])
         _dirs = [self.make_directory_item(d, isfolder=True, make_plugin_url=True) for d in dirs]
         xbmcplugin.addDirectoryItems(self.argv1, _dirs, len(_dirs))
         if end == True: 
