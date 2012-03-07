@@ -54,7 +54,7 @@ class Courses(_BasePluginHandler):
     
     def run(self):
         items = self.getAllCourse()
-        self.app.add_dirs(items)
+        self.app.add_dirs(items, sort=True)
 
 class Lectures(_BasePluginHandler):
     def parse_normal_course(self, div_tags):
